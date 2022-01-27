@@ -19,7 +19,7 @@ func main() {
 	//IsPalindrome()
 	//RevString()
 	//StringExMin()
-	DivideString()
+	//DivideString()
 }
 
 func DivideString() {
