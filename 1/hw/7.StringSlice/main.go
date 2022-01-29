@@ -33,6 +33,7 @@ func SplitMyString(getSlice []string) {
 
 		sliceRight := make([]string, sizeCap)
 		sliceLeft := make([]string, sizeCap)
+		println(sliceOfStr[1])
 		if (sizeCap > 1) && (sliceOfStr[0] < sliceOfStr[1]) {
 			for i := 0; i < sizeCap; i++ {
 				if (i+1 < sizeCap) && (sliceOfStr[i] < sliceOfStr[i+1]) {
