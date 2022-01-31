@@ -1,2 +1,2 @@
 #!/bin/sh
-cat input.txt | go run main.go
+cat input/input1.txt | go run main.go

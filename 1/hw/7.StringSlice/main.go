@@ -1,60 +1,128 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
-func main() {
-	StringExMin()
-}
+const (
+	NEGATIVE = -1
+	POSITIVE = 1
+	UNKNOWN  = 0
+)
 
-func StringExMin() {
-	var n int
-	var baseStr string
-	fmt.Scanf("%d", &n)
-	sliceOfStr := make([]string, n)
-	for i := 0; i < n; i++ {
-		fmt.Scanf("%s", &baseStr)
-		sliceOfStr[i] = baseStr
+func StringToInt(strTmp []string) []int {
+	sliceOfInt := make([]int, 0, len(strTmp))
+	for _, str := range strTmp {
+		i, _ := strconv.Atoi(str)
+		sliceOfInt = append(sliceOfInt, i)
 	}
-	SplitMyString(sliceOfStr)
+	return sliceOfInt
 }
 
-func SplitMyString(getSlice []string) {
-	var capOfSlice int
-	endSlice := make([]string, 0)
-	endSliceL := make([]string, 0)
-	capOfSlice = cap(getSlice)
-	for i := 0; i < capOfSlice; i++ {
-		str := getSlice[i]
-		sliceOfStr := strings.Split(str, "")
-		sizeCap := cap(sliceOfStr)
-
-		sliceRight := make([]string, sizeCap)
-		sliceLeft := make([]string, sizeCap)
-		println(sliceOfStr[1])
-		if (sizeCap > 1) && (sliceOfStr[0] < sliceOfStr[1]) {
-			for i := 0; i < sizeCap; i++ {
-				if (i+1 < sizeCap) && (sliceOfStr[i] < sliceOfStr[i+1]) {
-					sliceLeft[i] = sliceOfStr[i]
-				} else {
-					sliceRight[i] = sliceOfStr[i]
-				}
-			}
-		} else {
-			for i := 0; i < sizeCap; i++ {
-				if (i+1 < sizeCap) && (sliceOfStr[i] > sliceOfStr[i+1]) {
-					sliceLeft[i] = sliceOfStr[i]
-				} else {
-					sliceRight[i] = sliceOfStr[i]
-				}
+func main() {
+	var n int
+	fmt.Scanf("%d", &n)
+	saveSlice := make([]string, n)
+	for i := 0; i < n; i++ {
+		baseStr := bufio.NewScanner(os.Stdin)
+		baseStr.Scan()
+		for j := 0; j < len(strings.Split(baseStr.Text(), " ")); j++ {
+			if j != 0 {
+				saveSlice[i] = saveSlice[i] + " " + strings.Split(baseStr.Text(), " ")[j]
+			} else {
+				saveSlice[i] = saveSlice[i] + strings.Split(baseStr.Text(), " ")[j]
 			}
 		}
-		endSlice = append(endSlice, sliceRight...)
-		endSliceL = append(endSliceL, sliceLeft...)
-	}
-	endSlice = append(endSlice, endSliceL...)
-	fmt.Println(endSlice)
 
+	}
+	fmt.Println("save_slice: ", saveSlice)
+	/*
+		if len(saveSlice) == 1 {
+			fmt.Println("зашли")
+			fmt.Println("result: ", saveSlice)
+			return
+		}
+	*/
+	rightSlice := make([]int, 0, len(saveSlice))
+	leftSlice := make([]int, 0, len(saveSlice))
+
+	for _, elem := range saveSlice {
+		intSlice := StringToInt(strings.Split(elem, " "))
+
+		index := 0
+		state := UNKNOWN
+		for i := range intSlice {
+			if i+2 > len(intSlice) {
+				fmt.Println("зашли")
+				index = i + 1
+				break
+			}
+			if intSlice[i] > intSlice[i+1] {
+				if i+2 < len(intSlice) {
+					if state == UNKNOWN {
+						state = POSITIVE
+					}
+
+					if state == NEGATIVE {
+						index = i + 1
+						break
+					}
+				} else if state == POSITIVE {
+					index = i + 2
+					break
+				} else {
+					fmt.Println("тут ")
+					index = i + 1
+					break
+				}
+			} else if intSlice[i] < intSlice[i+1] {
+				if i+2 < len(intSlice) {
+					if state == UNKNOWN {
+						state = NEGATIVE
+					}
+
+					if state == POSITIVE {
+						index = i + 1
+						break
+					}
+				} else if state == NEGATIVE {
+					index = i + 2
+					break
+				} else {
+					fmt.Println(len(intSlice))
+					fmt.Println("тут1 ")
+					index = i + 1
+					break
+				}
+
+			} /*else if intSlice[i] == intSlice[i+1] {
+				if i+2 < len(intSlice) {
+					if state == NEGATIVE {
+						state = UNKNOWN
+					}
+					if state == POSITIVE {
+						state = UNKNOWN
+					}
+					if state == UNKNOWN {
+						index = i + 1
+						break
+					}
+				} else {
+					index = i + 2
+					break
+				}
+			} */
+		}
+
+		leftSlice = append(leftSlice, intSlice[:index]...)
+		rightSlice = append(rightSlice, intSlice[index:]...)
+	}
+
+	fmt.Println("left_slice: ", leftSlice)
+	fmt.Println("right_slice: ", rightSlice)
+	fmt.Println("result: ", append(rightSlice, leftSlice...))
 }
