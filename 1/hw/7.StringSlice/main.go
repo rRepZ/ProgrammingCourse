@@ -9,120 +9,84 @@ import (
 )
 
 const (
-	NEGATIVE = -1
-	POSITIVE = 1
-	UNKNOWN  = 0
+	DESC = iota - 1
+	UNKNOWN
+	ASC
 )
-
-func StringToInt(strTmp []string) []int {
-	sliceOfInt := make([]int, 0, len(strTmp))
-	for _, str := range strTmp {
-		i, _ := strconv.Atoi(str)
-		sliceOfInt = append(sliceOfInt, i)
-	}
-	return sliceOfInt
-}
 
 func main() {
 	var n int
-	fmt.Scanf("%d", &n)
-	saveSlice := make([]string, n)
+	fmt.Scanf("%d\n", &n)
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	rights := make([]int, 0)
+	lefts := make([]int, 0)
+
 	for i := 0; i < n; i++ {
-		baseStr := bufio.NewScanner(os.Stdin)
-		baseStr.Scan()
-		for j := 0; j < len(strings.Split(baseStr.Text(), " ")); j++ {
-			if j != 0 {
-				saveSlice[i] = saveSlice[i] + " " + strings.Split(baseStr.Text(), " ")[j]
-			} else {
-				saveSlice[i] = saveSlice[i] + strings.Split(baseStr.Text(), " ")[j]
-			}
-		}
+		scanner.Scan()
 
-	}
-	fmt.Println("save_slice: ", saveSlice)
-	/*
-		if len(saveSlice) == 1 {
-			fmt.Println("зашли")
-			fmt.Println("result: ", saveSlice)
-			return
-		}
-	*/
-	rightSlice := make([]int, 0, len(saveSlice))
-	leftSlice := make([]int, 0, len(saveSlice))
+		numsStr := strings.Split(scanner.Text(), " ")
+		nums := make([]int, 0, len(numsStr))
 
-	for _, elem := range saveSlice {
-		intSlice := StringToInt(strings.Split(elem, " "))
+		for _, ns := range numsStr {
+			n, _ := strconv.Atoi(ns)
+			nums = append(nums, n)
+		}
 
 		index := 0
 		state := UNKNOWN
-		for i := range intSlice {
-			if i+2 > len(intSlice) {
-				fmt.Println("зашли")
+
+	LOOP:
+		// for i := 0; i < len(nums) - 2; i++
+		// желательно до len(nums) - 1
+		for i := range nums {
+			if i+2 > len(nums) {
 				index = i + 1
 				break
 			}
-			if intSlice[i] > intSlice[i+1] {
-				if i+2 < len(intSlice) {
-					if state == UNKNOWN {
-						state = POSITIVE
-					}
 
-					if state == NEGATIVE {
+			switch {
+			case nums[i] > nums[i+1]:
+				// избавиться от условия, идти в цикле до len(nums) - 1
+				// в лучшем случае общая логика должна содержать именно условие что делать, если посл-ть низходящая но на данном элементе наоборот
+				if i+2 < len(nums) {
+					if state == DESC {
 						index = i + 1
-						break
+						break LOOP
 					}
-				} else if state == POSITIVE {
+				} else if state == ASC {
 					index = i + 2
-					break
+					break LOOP
 				} else {
-					fmt.Println("тут ")
 					index = i + 1
-					break
+					break LOOP
 				}
-			} else if intSlice[i] < intSlice[i+1] {
-				if i+2 < len(intSlice) {
-					if state == UNKNOWN {
-						state = NEGATIVE
-					}
-
-					if state == POSITIVE {
+				state = ASC
+			case nums[i] < nums[i+1]:
+				state = DESC
+				if i+2 < len(nums) {
+					if state == ASC {
 						index = i + 1
-						break
+						break LOOP
 					}
-				} else if state == NEGATIVE {
+				} else if state == DESC {
 					index = i + 2
-					break
+					break LOOP
 				} else {
-					fmt.Println(len(intSlice))
-					fmt.Println("тут1 ")
 					index = i + 1
-					break
+					break LOOP
 				}
-
-			} /*else if intSlice[i] == intSlice[i+1] {
-				if i+2 < len(intSlice) {
-					if state == NEGATIVE {
-						state = UNKNOWN
-					}
-					if state == POSITIVE {
-						state = UNKNOWN
-					}
-					if state == UNKNOWN {
-						index = i + 1
-						break
-					}
-				} else {
-					index = i + 2
-					break
-				}
-			} */
+			}
 		}
 
-		leftSlice = append(leftSlice, intSlice[:index]...)
-		rightSlice = append(rightSlice, intSlice[index:]...)
+		// краевые случаи рассмотреть здесь
+		lefts = append(lefts, nums[:index]...)
+		rights = append(rights, nums[index:]...)
 	}
 
-	fmt.Println("left_slice: ", leftSlice)
-	fmt.Println("right_slice: ", rightSlice)
-	fmt.Println("result: ", append(rightSlice, leftSlice...))
+	result := append(rights, lefts...)
+	for _, i := range result {
+		fmt.Printf("%d ", i)
+	}
 }

@@ -16,92 +16,50 @@ const (
 
 func main() {
 	var n int
-	fmt.Scanf("%d", &n)
-	saveSlice := make([]string, n)
+	fmt.Scanf("%d\n", &n)
+
+	s := bufio.NewScanner(os.Stdin)
+
+	lefts := make([]int, 0)
+	rights := make([]int, 0)
 	for i := 0; i < n; i++ {
-		baseStr := bufio.NewScanner(os.Stdin)
-		baseStr.Scan()
-		for j := 0; j < len(strings.Split(baseStr.Text(), " ")); j++ {
-			if j != 0 {
-				saveSlice[i] = saveSlice[i] + " " + strings.Split(baseStr.Text(), " ")[j]
-			} else {
-				saveSlice[i] = saveSlice[i] + strings.Split(baseStr.Text(), " ")[j]
+		s.Scan()
+		numsStr := strings.Split(s.Text(), " ")
+		nums := make([]int, 0, len(numsStr))
+		for _, ns := range numsStr {
+			n, _ := strconv.Atoi(ns)
+			nums = append(nums, n)
+		}
+
+		threshold := len(nums)
+		asc, desc := false, false
+	LOOP:
+		for i := 0; i < len(nums)-1; i++ {
+			switch {
+			case nums[i+1] > nums[i]:
+				if desc {
+					threshold = i + 1
+					break LOOP
+				}
+				asc = true
+			case nums[i+1] < nums[i]:
+				if asc {
+					threshold = i + 1
+					break LOOP
+				}
+				desc = true
 			}
 		}
 
+		// краевые случаи
+		lefts = append(lefts, nums[:threshold]...)
+		rights = append(rights, nums[threshold:]...)
 	}
 
-	rightSlice := make([]int, 0, len(saveSlice))
-	leftSlice := make([]int, 0, len(saveSlice))
-	glob_j := 0
-	for i := 0; i < len(saveSlice); i++ {
-		state := UNKNOWN
-		intSlice := StringToInt(strings.Split(saveSlice[i], " "))
-		fmt.Println(len(intSlice))
-		if glob_j+1 >= len(intSlice) {
-			leftSlice = append(leftSlice, intSlice...)
-
-		} else if intSlice[glob_j] > intSlice[glob_j+1] {
-
-			for intSlice[glob_j] > intSlice[glob_j+1] {
-				if glob_j+2 < len(intSlice) {
-					glob_j++
-
-				} else {
-					glob_j++
-					break
-				}
-			}
-			leftSlice = append(leftSlice, intSlice[:glob_j+1]...)
-			rightSlice = append(rightSlice, intSlice[glob_j+1:]...)
-			glob_j = 0
-		} else if intSlice[glob_j] < intSlice[glob_j+1] {
-			for intSlice[glob_j] <= intSlice[glob_j+1] {
-
-				if glob_j+2 < len(intSlice) {
-					glob_j++
-				} else {
-					glob_j++
-					break
-				}
-				//glob_j++
-			}
-			leftSlice = append(leftSlice, intSlice[:glob_j+1]...)
-			fmt.Println(leftSlice)
-			rightSlice = append(rightSlice, intSlice[glob_j+1:]...)
-			glob_j = 0
-		} else if intSlice[glob_j] == intSlice[glob_j+1] {
-			for intSlice[glob_j]-intSlice[glob_j+1] <= 0 {
-				if glob_j+2 < len(intSlice) {
-					glob_j++
-				} else {
-					glob_j++
-					break
-				}
-
-				leftSlice = append(leftSlice, intSlice[:glob_j+1]...)
-				fmt.Println(leftSlice)
-				rightSlice = append(rightSlice, intSlice[glob_j+1:]...)
-				glob_j = 0
-				//glob_j++
-			}
-		}
-
+	for _, r := range rights {
+		fmt.Printf("%d ", r)
 	}
-	//fmt.Println(intSlice)
-	//fmt.Println(leftSlice)
-	//fmt.Println(rightSlice)
-	fmt.Println(append(rightSlice, leftSlice...))
-
-}
-
-func StringToInt(strTmp []string) []int {
-	sliceOfInt := make([]int, 0, len(strTmp))
-	var str string
-	var i int
-	for _, str = range strTmp {
-		i, _ = strconv.Atoi(str)
-		sliceOfInt = append(sliceOfInt, i)
+	for _, l := range lefts {
+		fmt.Printf("%d ", l)
 	}
-	return sliceOfInt
 }
