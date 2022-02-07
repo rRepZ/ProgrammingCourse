@@ -17,4 +17,7 @@ func MaxSum(thisSlice []int) {
 func main() {
 	mass := []int{1, 2, 3, 4, 5, 2, 6, 7, 8, 8}
 	MaxSum(mass)
+	n := "b"
+	fmt.Println([]rune(n)[0] - []rune("a")[0])
+
 }
