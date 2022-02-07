@@ -6,7 +6,7 @@ import "fmt"
 
 func main() {
 	//fmt.Println(RemoveDuplicatesBrutForce([]int{1, 2, 2, 1, 1}))
-	fmt.Println(RemoveDuplicatesMap([]int{1, 2, 2, 1, 1}))
+	fmt.Println(RemoveDuplicatesMap([]int{1, 2, 2, 1, 1, 3, 3, 4}))
 }
 
 func RemoveDuplicatesBrutForce(input []int) []int { // сложность временнная О(n^2); по памяти - O(n)
@@ -28,21 +28,28 @@ func RemoveDuplicatesBrutForce(input []int) []int { // сложность вре
 }
 
 func RemoveDuplicatesMap(input []int) []int { // сложность врменная -- O(n); по памяти -- O(2n)
-	resultMap := make(map[int]struct{})
-
+	resultMap := make(map[int]int)
+	//element := 1
 	for i := 0; i < len(input); i++ {
-		resultMap[input[i]] = struct{}{}
+		if resultMap[input[i]] >= 1 {
+			resultMap[input[i]] = resultMap[input[i]] + 1
+		} else {
+			resultMap[input[i]] = 1
+		}
 	}
+	fmt.Println(resultMap)
 	result := make([]int, 0, len(resultMap))
 	for k := range resultMap {
 		result = append(result, k)
 	}
+
 	return result
 }
 
+/*
 // c использованием сортировки; golang sort + написать бенчмарки
 func RemoveDuplicatesSort(input []int) []int {
 
 }
-
+*/
 // написать программу для вычисления чисел Фиббоначи рекурсивно и циклом + бенчмарки
