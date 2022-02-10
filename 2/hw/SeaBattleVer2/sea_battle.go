@@ -15,18 +15,69 @@ const (
 	MISS
 )
 
+type CellStatus int
+
+const (
+	SHOT CellStatus = iota
+	NEAR_SHIP
+)
+
+type Orientation int
+
+const (
+	HORIZONTAL = iota
+	VERTICAL
+)
+
 type cmdHandler func(string) string
 
-type field [][]int
+type tempCelsius int
+
+func (t *tempCelsius) toFarenheit() int {
+	// todo
+	return 123
+}
+
+type cell struct {
+	ship   *ship
+	status *CellStatus
+}
+
+type ship struct {
+	name        string
+	x           int
+	y           int
+	decks       []int
+	orientation Orientation
+}
+
+func (s *ship) shot() {
+
+}
+
+type field struct {
+	cells [][]*cell
+}
+
+func (f *field) shot(x, y int) ShotResult {
+	// здесь обработка выстрела
+}
 
 func main() {
 	s := bufio.NewScanner(os.Stdin)
-	game := newGame()
+
+	p1 := &player{}
+	p2 := &player{}
+	p1.enemy = p2
+	p2.enemy = p1
+
+	game := newGame(p1, p2, p1)
 
 	// старт сервера
 	for {
 		s.Scan()
 		cmd := s.Text()
+
 		handler, err := ValidateAndParse(cmd, game)
 		if err != nil {
 			fmt.Printf("invalid input: %s", err.Error())
@@ -75,34 +126,45 @@ func ValidateShoot(input string) error {
 	return nil
 }
 
-// HandleShoot обработка выстрела
+type player struct {
+	name       string
+	enemy      *player
+	stepsCount int
+
+	field field
+}
+
+func (p *player) doMove(x, y int) (result ShotResult, fieldAfterShot [][]int8) {
+	result, fieldAfterShot = p.enemy.getShot(x, y)
+	return
+}
+
+func (p *player) getShot(x, y int) (result ShotResult, fieldAfterShot [][]int8) {
+	res := p.field.shot(x, y)
+	return res, p.field
+}
 
 type game struct {
-	fields            []field
-	currentPlayerMove int
+	player1 *player
+	player2 *player
+
+	currentPlayer *player
 }
 
 func (g *game) HandleShoot(input string) string {
 	x := rune(input[0])
 	y, _ := strconv.Atoi(input[1:])
 
-	// взять все игровые поля, кроме g.fields[g.currentPlayerMove]
-	// написать сюда логику обработки выстрела по этим полям
-
-	var output string
-	for _, f := range fieldsToShoot {
-		// попал не попал и всё такое
-		// shotResult := g.handleShootInternal()
-		// output += mapResult(shotResult)
-	}
-
-	// отмаппить результат выполнения команды на строковое представление
+	res, field := g.currentPlayer.doMove(x, y)
+	// todo преобразовать в строковое представление и вернуть
 }
 
-func newGame() *game {
+func newGame(p1, p2, curr *player) *game {
 	// todo create fields
 	return &game{
-		fields: fields,
+		player1:       p1,
+		player2:       p2,
+		currentPlayer: curr,
 	}
 }
 
