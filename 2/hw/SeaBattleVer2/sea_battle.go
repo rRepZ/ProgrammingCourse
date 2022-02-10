@@ -51,6 +51,11 @@ type ship struct {
 	orientation Orientation
 }
 
+// todo
+func newShip(name string, x, y int) *ship {
+
+}
+
 func (s *ship) shot() {
 
 }
