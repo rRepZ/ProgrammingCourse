@@ -1,5 +1,14 @@
 package main
 
+// TODO все инициализируется в конструкторах, зависимости  передаются в параметры конструктора
+// TODO не мутировать состояния по ходу действия программы, инициализировать новые объекты
+// TODO отрефакторить main, чтобы соответствовать тому как я написал
+// TODO убрать принты по ходу программы
+// TODO имена переменных использовать краткие, ёмкие, не использовать snake_case(rand_j) => randJ, thisField => field или f
+// TODO быть уверенным, что используются все конструкторы(NewField, NewCell)
+// TODO избавиться от повисших в воздухе функций, всё сделать методами
+// TODO начать переписывать на интерфейсы
+
 import (
 	"bufio"
 	"fmt"
@@ -21,6 +30,7 @@ type CellStatus int
 
 const (
 	FREE CellStatus = iota
+	// todo чем shot отличается от attacked?
 	SHOT
 	SHIP
 	NEAR_SHIP
@@ -44,12 +54,27 @@ const (
 type cmdHandler func(string) string
 
 type cell struct {
-	ship   *ship
+	ship   Ship
 	status CellStatus
 }
 
-//func NewCell()
-type ship struct {
+func NewCell(ship Ship, status CellStatus) *cell {
+	return &cell{
+		ship:   ship,
+		status: status,
+	}
+}
+
+type Ship interface {
+	IsFit(f *field) bool
+	GetShot(x, y int)
+	GetX() int
+	GetY() int
+	// и так далее...
+}
+
+
+type shipImpl struct {
 	name        string
 	x           int //крайняя левая или верхняя координата
 	y           int
@@ -59,8 +84,9 @@ type ship struct {
 }
 
 // todo
-func NewShip(name string /*x, y int,*/, shipSize int, hp int) *ship { //подумать над shipSize
-	thisShip := new(ship)
+func NewShip(name string /*x, y int,*/, shipSize int, hp int) *shipImpl { //подумать над shipSize
+	// some code
+	thisShip := new(shipImpl)
 	thisShip.name = name
 	thisShip.health = hp
 	//thisShip.x = x
@@ -68,19 +94,23 @@ func NewShip(name string /*x, y int,*/, shipSize int, hp int) *ship { //поду
 	for i := 0; i < shipSize; i++ {
 		thisShip.decks = append(thisShip.decks, i)
 	}
-	return &ship{
+	return &shipImpl{
 		name:  thisShip.name,
 		decks: thisShip.decks,
 	}
 }
 
 //IsFit проверка возможности размещения
-func (*ship) IsFit(f *field) bool {
+func (*shipImpl) IsFit(f *field) bool {
+
+}
+
+func (*shipImpl) GetShot(x, y int) {
 
 }
 
 //массив имён //перемешать в случайном порядке
-
+// TODO создавать в цикле согласно указанному флоу
 func ShipCreating(f *field) { //CreateShips
 	for i := 0; i < 4; i++ {
 		for j := 4 - i; j <= 4; j++ {
@@ -93,8 +123,8 @@ func ShipCreating(f *field) { //CreateShips
 			}
 		}
 	}
-	//PlayerShipOneDeck1 := new(ship)
-	//PlayerShipOneDeck2 := new(ship)
+	//PlayerShipOneDeck1 := new(shipImpl)
+	//PlayerShipOneDeck2 := new(shipImpl)
 	PlayerShipOneDeck1 := NewShip("Arnold", 1, 1) //создаём корабли с одной палубой
 	PlayerShipOneDeck2 := NewShip("Gregory", 1, 1)
 	PlayerShipOneDeck3 := NewShip("Marston", 1, 1)
@@ -129,7 +159,7 @@ func ShipCreating(f *field) { //CreateShips
 
 }
 
-func ShipBuilder(thisShip *ship, thisField *field) { //rename to
+func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 	var rand_i, rand_j int
 	isFind := false
 	shipSize := len(thisShip.decks) - 1 // для прохождения по нужному количеству клеток
@@ -164,9 +194,11 @@ func ShipBuilder(thisShip *ship, thisField *field) { //rename to
 					switch {
 					case i < rand_i:
 						for ; i < rand_i; i++ {
-							thisField.cells[i][rand_j].status = SHIP
-							thisField.cells[i][rand_j].ship = thisShip
-							thisShip.orientation = VERTICAL
+							// todo не мутировать состояние ячейки, создавать всегда новую
+							thisField.cells[i][rand_j] = NewCell(thisShip, SHIP)
+							//thisField.cells[i][rand_j].status = SHIP
+							//thisField.cells[i][rand_j].ship = thisShip
+							//thisShip.orientation = VERTICAL
 						}
 						thisShip.x = rand_j
 						thisShip.y = i
@@ -247,7 +279,7 @@ func ShipBuilder(thisShip *ship, thisField *field) { //rename to
 
 }
 
-func PointAround(thisField *field, thisShip *ship) {
+func PointAround(thisField *field, thisShip *shipImpl) {
 	this_i := thisShip.y
 	j := thisShip.x
 	fmt.Println(thisShip)
@@ -360,7 +392,7 @@ func CheckField(thisField *field, i int, j int) bool { //проверяем по
 	return checkPoint
 }
 
-func (s *ship) shot() { //метод для игрока??
+func (s *shipImpl) shot() { //метод для игрока??
 
 }
 
