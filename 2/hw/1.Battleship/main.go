@@ -10,7 +10,7 @@ import (
 	"time"
 ) //⧆
 
-func GetShot(thisField [10][10]string, i int, j int) [10][10]string {
+func GetShot(thisField [][]string, i int, j int) [][]string {
 
 	if thisField[i][j] == "#" {
 		thisField[i][j] = "❋"
@@ -25,7 +25,7 @@ func GetShot(thisField [10][10]string, i int, j int) [10][10]string {
 	return thisField
 }
 
-func PointAround(thisField [10][10]string, i int, j int) [10][10]string {
+func PointAround(thisField [][]string, i int, j int) [][]string {
 	this_i := i
 	CheckOrientHorizontal := true
 	if j-1 != -1 {
@@ -149,7 +149,7 @@ func PointAround(thisField [10][10]string, i int, j int) [10][10]string {
 
 }
 
-func ShipBuilder(thisField [10][10]string, numberOfShips int, shipSize int) [10][10]string {
+func ShipBuilder(thisField [][]string, numberOfShips int, shipSize int) [][]string {
 	var rand_i, rand_j int
 	isFind := false
 	shipSize = shipSize - 1 // для прохождения по нужному количеству клеток
@@ -235,7 +235,7 @@ func ShipBuilder(thisField [10][10]string, numberOfShips int, shipSize int) [10]
 	return thisField
 }
 
-func PlacingShip(thisField [10][10]string) [10][10]string {
+func PlacingShip(thisField [][]string) [][]string {
 
 	thisField = ShipBuilder(thisField, 4, 1)
 	thisField = ShipBuilder(thisField, 3, 2)
@@ -244,7 +244,7 @@ func PlacingShip(thisField [10][10]string) [10][10]string {
 	return thisField
 }
 
-func CheckDefeat(thisField [10][10]string, i int, j int) bool { //делаем проверку, полностью ли побеждён корабль
+func CheckDefeat(thisField [][]string, i int, j int) bool { //делаем проверку, полностью ли побеждён корабль
 	checkPoint := true
 
 	this_i := i
@@ -311,7 +311,7 @@ func CheckDefeat(thisField [10][10]string, i int, j int) bool { //делаем �
 	return checkPoint
 }
 
-func CheckField(thisField [10][10]string, i int, j int) bool { //проверяем поля для правильности размещения кораблей
+func CheckField(thisField [][]string, i int, j int) bool { //проверяем поля для правильности размещения кораблей
 	checkPoint := true
 
 	check_i := i - 1
@@ -343,19 +343,20 @@ func CheckField(thisField [10][10]string, i int, j int) bool { //проверя�
 	return checkPoint
 }
 
-func PlayersField() [10][10]string {
+func PlayersField(size int) [][]string {
+	field := make([][]string, size)
 
-	var field [10][10]string
-	for i := 0; i < 10; i++ {
-		for j := 0; j < 10; j++ {
-			field[i][j] = "#"
+	for i := 0; i < size; i++ {
+		//field = append(field, []string{}) //выделяем память по i
+		for j := 0; j < size; j++ {
+			field[i] = append(field[i], "#")
 		}
 	}
 
 	return field
 }
 
-func FillHidden(thisField [10][10]string, hiddenField [10][10]string) [10][10]string {
+func FillHidden(thisField [][]string, hiddenField [][]string) [][]string {
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 10; j++ {
 			switch {
@@ -371,7 +372,7 @@ func FillHidden(thisField [10][10]string, hiddenField [10][10]string) [10][10]st
 	return hiddenField
 }
 
-func IsWin(thisField [10][10]string) bool {
+func IsWin(thisField [][]string) bool {
 	defShips := 0
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 10; j++ {
@@ -386,7 +387,7 @@ func IsWin(thisField [10][10]string) bool {
 	return false
 }
 
-func FieldDraw(thisField [10][10]string) {
+func FieldDraw(thisField [][]string) {
 	fmt.Println("   a b c d e f g h i j")
 	for i := 0; i < 10; i++ {
 		fmt.Printf(" %d", i)
@@ -401,20 +402,21 @@ func main() {
 	//fmt.Scanf("%d", &n)
 
 	isLoop := false
-	MyField := PlayersField()
-	BotField := PlayersField()
-	HiddenField := PlayersField()
+	MyField := PlayersField(10) //Названия перменных с маленьких букв
+	BotField := PlayersField(10)
+	HiddenField := PlayersField(10) // нужно 2 поля
+	FieldDraw(MyField)
 	fmt.Println("menu ")
 	fmt.Println("1 -- to start battleship game; 2 -- to shot; 3 -- to clear ur field and restart; 5 -- to see help info")
 	fmt.Println("6 -- to exit")
-	for isExit == false {
-		if isLoop {
+	for !isExit {
+		if isLoop { //переименовать в inGame
 			fmt.Println("choose 2 to continue, 5 for help, 7 to see ur field")
 		}
 		fmt.Scanf("%d", &n)
 		switch {
 
-		case n == 1:
+		case n == 1: //текст вместо цифр
 
 			if isLoop {
 				fmt.Println("U want restart game? Try to select option № 3")
@@ -507,9 +509,9 @@ func main() {
 				fmt.Println("At first u must start a game, choose 1")
 			}
 		case n == 3:
-			MyField = PlayersField()
-			BotField = PlayersField()
-			HiddenField = PlayersField()
+			MyField = PlayersField(10)
+			BotField = PlayersField(10)
+			HiddenField = PlayersField(10)
 			isLoop = false
 		case n == 4:
 			fmt.Println("Cheats on =)")
