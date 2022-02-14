@@ -69,14 +69,30 @@ func NewShip(name string /*x, y int,*/, shipSize int, hp int) *ship { //поду
 		thisShip.decks = append(thisShip.decks, i)
 	}
 	return &ship{
-		name: thisShip.name,
-		//x:     thisShip.x,
-		//y:     thisShip.y,
+		name:  thisShip.name,
 		decks: thisShip.decks,
 	}
 }
 
-func ShipCreating(thisField *field) {
+//IsFit проверка возможности размещения
+func (*ship) IsFit(f *field) bool {
+
+}
+
+//массив имён //перемешать в случайном порядке
+
+func ShipCreating(f *field) { //CreateShips
+	for i := 0; i < 4; i++ {
+		for j := 4 - i; j <= 4; j++ {
+			for {
+				s := NewShip("Arnold", j, j)
+				if s.IsFit(f) {
+					f.AddShip(s)
+					break
+				}
+			}
+		}
+	}
 	//PlayerShipOneDeck1 := new(ship)
 	//PlayerShipOneDeck2 := new(ship)
 	PlayerShipOneDeck1 := NewShip("Arnold", 1, 1) //создаём корабли с одной палубой
@@ -89,8 +105,8 @@ func ShipCreating(thisField *field) {
 	PlayerShipThreeDeck1 := NewShip("Bob", 3, 3) // //создаём корабли с тремя палубами
 	PlayerShipThreeDeck2 := NewShip("Viper", 3, 3)
 	PlayerShipFourDeck := NewShip("Chrono", 4, 4) //создаём корабли с 4мя палубами
-	ShipBuilder(PlayerShipOneDeck1, thisField)
-	ShipBuilder(PlayerShipOneDeck2, thisField)
+	ShipBuilder(PlayerShipOneDeck1, f)
+	ShipBuilder(PlayerShipOneDeck2, f)
 	ShipBuilder(PlayerShipOneDeck3, thisField)
 	ShipBuilder(PlayerShipOneDeck4, thisField)
 	ShipBuilder(PlayerShipTwoDeck1, thisField)
@@ -113,7 +129,7 @@ func ShipCreating(thisField *field) {
 
 }
 
-func ShipBuilder(thisShip *ship, thisField *field) {
+func ShipBuilder(thisShip *ship, thisField *field) { //rename to
 	var rand_i, rand_j int
 	isFind := false
 	shipSize := len(thisShip.decks) - 1 // для прохождения по нужному количеству клеток
@@ -122,7 +138,7 @@ func ShipBuilder(thisShip *ship, thisField *field) {
 		rand_i = rand.Intn(10)
 		rand_j = rand.Intn(10)
 		fmt.Println("вошли")
-		for CheckField(thisField, rand_i, rand_j) == false {
+		for !CheckField(thisField, rand_i, rand_j) {
 			fmt.Println(CheckField(thisField, rand_i, rand_j))
 
 			rand_i = rand.Intn(10)
@@ -402,25 +418,21 @@ func (thisField *field) shot(i, j int) ShotResult { //return shotResult?
 	return MISS
 }
 
-/*
-func (thisField *field) IsDead() {
-	thisField.cells[i][j].ship
-}
-*/
-
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	s := bufio.NewScanner(os.Stdin)
 
 	p1 := &player{}
 	p2 := &player{}
-	p1.enemy = p2
-	p2.enemy = p1
-
-	game := NewGame(p1, p2, p1)
 	p1Field := new(field)
 	p1Field = NewField(10)
+	p2Field := new(field)
+	p2Field = NewField(10)
+
+	p1 = NewPlayer("Player", p2, p1Field)
+	p2 = NewPlayer("Bot", p1, p2Field)
 	ShipCreating(p1Field)
+	game := NewGame(p1, p2, p1)
 	DrawField(p1Field)
 
 	// старт сервера
@@ -482,20 +494,29 @@ type player struct {
 	enemy      *player
 	stepsCount int
 
-	playerField field
+	playerField *field
 }
 
-/*
-func (p *player) doMove(x, y int) (result ShotResult, fieldAfterShot [][]int8) {
+func NewPlayer(name string, enemy *player, f *field) *player {
+	return &player{
+		name:        name,
+		enemy:       enemy,
+		stepsCount:  0,
+		playerField: f,
+	}
+
+}
+
+func (p *player) doMove(x, y int) (result ShotResult, fieldAfterShot *field) {
 	result, fieldAfterShot = p.enemy.getShot(x, y)
 	return
 }
 
-func (p *player) getShot(x, y int) (result ShotResult, fieldAfterShot [][]int8) {
+func (p *player) getShot(x, y int) (result ShotResult, fieldAfterShot *field) {
 	res := p.playerField.shot(x, y)
 	return res, p.playerField
 }
-*/
+
 type game struct {
 	player1 *player
 	player2 *player
@@ -503,7 +524,6 @@ type game struct {
 	currentPlayer *player
 }
 
-/*
 func (g *game) HandleShoot(input string) string {
 	x := rune(input[0])
 	y, _ := strconv.Atoi(input[1:])
@@ -511,7 +531,7 @@ func (g *game) HandleShoot(input string) string {
 	res, field := g.currentPlayer.doMove(x, y)
 	// todo преобразовать в строковое представление и вернуть
 }
-*/
+
 func NewGame(p1, p2, curr *player) *game {
 	// todo create fields
 	return &game{
