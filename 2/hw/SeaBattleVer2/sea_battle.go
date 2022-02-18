@@ -54,17 +54,18 @@ const (
 type cmdHandler func(string) string
 
 type cell struct {
-	ship   Ship
+	ship   *shipImpl
 	status CellStatus
 }
 
-func NewCell(ship Ship, status CellStatus) *cell {
+func NewCell(ship *shipImpl, status CellStatus) *cell {
 	return &cell{
 		ship:   ship,
 		status: status,
 	}
 }
 
+/*
 type Ship interface {
 	IsFit(f *field) bool
 	GetShot(x, y int)
@@ -72,7 +73,7 @@ type Ship interface {
 	GetY() int
 	// и так далее...
 }
-
+*/
 
 type shipImpl struct {
 	name        string
@@ -95,16 +96,18 @@ func NewShip(name string /*x, y int,*/, shipSize int, hp int) *shipImpl { //по
 		thisShip.decks = append(thisShip.decks, i)
 	}
 	return &shipImpl{
-		name:  thisShip.name,
-		decks: thisShip.decks,
+		name:   thisShip.name,
+		decks:  thisShip.decks,
+		health: thisShip.health,
 	}
 }
 
 //IsFit проверка возможности размещения
+/*
 func (*shipImpl) IsFit(f *field) bool {
 
 }
-
+*/
 func (*shipImpl) GetShot(x, y int) {
 
 }
@@ -113,53 +116,56 @@ func (*shipImpl) GetShot(x, y int) {
 // TODO создавать в цикле согласно указанному флоу
 func ShipCreating(f *field) { //CreateShips
 	for i := 0; i < 4; i++ {
-		for j := 4 - i; j <= 4; j++ {
+		for j := i; j < 4; j++ {
 			for {
-				s := NewShip("Arnold", j, j)
-				if s.IsFit(f) {
-					f.AddShip(s)
-					break
-				}
+				s := NewShip("Arnold", i+1, i+1)
+
+				f.AddShip(s)
+
+				break
+
 			}
 		}
 	}
 	//PlayerShipOneDeck1 := new(shipImpl)
 	//PlayerShipOneDeck2 := new(shipImpl)
-	PlayerShipOneDeck1 := NewShip("Arnold", 1, 1) //создаём корабли с одной палубой
-	PlayerShipOneDeck2 := NewShip("Gregory", 1, 1)
-	PlayerShipOneDeck3 := NewShip("Marston", 1, 1)
-	PlayerShipOneDeck4 := NewShip("Momo", 1, 1)
-	PlayerShipTwoDeck1 := NewShip("Tompson", 2, 2) //создаём корабли с двумя палубами
-	PlayerShipTwoDeck2 := NewShip("Flower", 2, 2)
-	PlayerShipTwoDeck3 := NewShip("Fisherman", 2, 2)
-	PlayerShipThreeDeck1 := NewShip("Bob", 3, 3) // //создаём корабли с тремя палубами
-	PlayerShipThreeDeck2 := NewShip("Viper", 3, 3)
-	PlayerShipFourDeck := NewShip("Chrono", 4, 4) //создаём корабли с 4мя палубами
-	ShipBuilder(PlayerShipOneDeck1, f)
-	ShipBuilder(PlayerShipOneDeck2, f)
-	ShipBuilder(PlayerShipOneDeck3, thisField)
-	ShipBuilder(PlayerShipOneDeck4, thisField)
-	ShipBuilder(PlayerShipTwoDeck1, thisField)
-	ShipBuilder(PlayerShipTwoDeck2, thisField)
-	ShipBuilder(PlayerShipTwoDeck3, thisField)
-	ShipBuilder(PlayerShipThreeDeck1, thisField)
-	ShipBuilder(PlayerShipThreeDeck2, thisField)
-	ShipBuilder(PlayerShipFourDeck, thisField)
-	fmt.Println(PlayerShipOneDeck1)
-	fmt.Println(PlayerShipOneDeck2)
-	fmt.Println(PlayerShipOneDeck3)
-	fmt.Println(PlayerShipOneDeck4)
-	fmt.Println(PlayerShipTwoDeck1)
-	fmt.Println(PlayerShipTwoDeck2)
-	fmt.Println(PlayerShipTwoDeck3)
-	fmt.Println(PlayerShipThreeDeck1)
-	fmt.Println(PlayerShipThreeDeck2)
-	fmt.Println(PlayerShipFourDeck)
-	fmt.Println(len(thisField.cells))
+	/*
+		PlayerShipOneDeck1 := NewShip("Arnold", 1, 1) //создаём корабли с одной палубой
+		PlayerShipOneDeck2 := NewShip("Gregory", 1, 1)
+		PlayerShipOneDeck3 := NewShip("Marston", 1, 1)
+		PlayerShipOneDeck4 := NewShip("Momo", 1, 1)
+		PlayerShipTwoDeck1 := NewShip("Tompson", 2, 2) //создаём корабли с двумя палубами
+		PlayerShipTwoDeck2 := NewShip("Flower", 2, 2)
+		PlayerShipTwoDeck3 := NewShip("Fisherman", 2, 2)
+		PlayerShipThreeDeck1 := NewShip("Bob", 3, 3) // //создаём корабли с тремя палубами
+		PlayerShipThreeDeck2 := NewShip("Viper", 3, 3)
+		PlayerShipFourDeck := NewShip("Chrono", 4, 4) //создаём корабли с 4мя палубами
+		ShipBuilder(PlayerShipOneDeck1, f)
+		ShipBuilder(PlayerShipOneDeck2, f)
+		ShipBuilder(PlayerShipOneDeck3, f)
+		ShipBuilder(PlayerShipOneDeck4, f)
+		ShipBuilder(PlayerShipTwoDeck1, f)
+		ShipBuilder(PlayerShipTwoDeck2, f)
+		ShipBuilder(PlayerShipTwoDeck3, f)
+		ShipBuilder(PlayerShipThreeDeck1, f)
+		ShipBuilder(PlayerShipThreeDeck2, f)
+		ShipBuilder(PlayerShipFourDeck, f)
+		fmt.Println(PlayerShipOneDeck1)
+		fmt.Println(PlayerShipOneDeck2)
+		fmt.Println(PlayerShipOneDeck3)
+		fmt.Println(PlayerShipOneDeck4)
+		fmt.Println(PlayerShipTwoDeck1)
+		fmt.Println(PlayerShipTwoDeck2)
+		fmt.Println(PlayerShipTwoDeck3)
+		fmt.Println(PlayerShipThreeDeck1)
+		fmt.Println(PlayerShipThreeDeck2)
+		fmt.Println(PlayerShipFourDeck)
+		fmt.Println(len(thisField.cells))
+	*/
 
 }
 
-func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
+func (f *field) AddShip(thisShip *shipImpl) { //rename to
 	var rand_i, rand_j int
 	isFind := false
 	shipSize := len(thisShip.decks) - 1 // для прохождения по нужному количеству клеток
@@ -168,17 +174,17 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 		rand_i = rand.Intn(10)
 		rand_j = rand.Intn(10)
 		fmt.Println("вошли")
-		for !CheckField(thisField, rand_i, rand_j) {
-			fmt.Println(CheckField(thisField, rand_i, rand_j))
+		for !CheckField(f, rand_i, rand_j) {
+			fmt.Println(CheckField(f, rand_i, rand_j))
 
 			rand_i = rand.Intn(10)
 			rand_j = rand.Intn(10)
 
 		}
-		fmt.Println(CheckField(thisField, rand_i, rand_j))
+		fmt.Println(CheckField(f, rand_i, rand_j))
 
 		for i := rand_i - shipSize; i <= rand_i+shipSize; i += shipSize { // делаем проверку для второго отсека корабля (сверху вниз)
-			if i >= len(thisField.cells) { //i стало равно 10 (выход за пределы поля)
+			if i >= len(f.cells) { //i стало равно 10 (выход за пределы поля)
 
 				break //выход, дальше некуда итерировать
 			}
@@ -189,13 +195,14 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 			switch {
 			case i != rand_i:
 				//j := rarand_j //когда просмтариваем сверху или снизу, то j статична
-				if CheckField(thisField, i, rand_j) == true {
+				if CheckField(f, i, rand_j) == true {
 					isFind = true
 					switch {
 					case i < rand_i:
 						for ; i < rand_i; i++ {
 							// todo не мутировать состояние ячейки, создавать всегда новую
-							thisField.cells[i][rand_j] = NewCell(thisShip, SHIP)
+							thisShip.orientation = VERTICAL
+							f.cells[i][rand_j] = NewCell(thisShip, SHIP)
 							//thisField.cells[i][rand_j].status = SHIP
 							//thisField.cells[i][rand_j].ship = thisShip
 							//thisShip.orientation = VERTICAL
@@ -207,9 +214,12 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 						thisShip.x = rand_j
 						thisShip.y = i
 						for ; i > rand_i; i-- {
-							thisField.cells[i][rand_j].status = SHIP
-							thisField.cells[i][rand_j].ship = thisShip
 							thisShip.orientation = VERTICAL
+							f.cells[i][rand_j] = NewCell(thisShip, SHIP)
+							/*
+								thisField.cells[i][rand_j].status = SHIP
+								thisField.cells[i][rand_j].ship = thisShip
+							*/
 						}
 					}
 
@@ -222,11 +232,11 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 					if j <= -1 {
 						j = rand_j + shipSize
 					}
-					if j >= len(thisField.cells) { //когда проверяет границы
+					if j >= len(f.cells) { //когда проверяет границы
 						break
 					}
 
-					if CheckField(thisField, i, j) == true {
+					if CheckField(f, i, j) == true {
 						fmt.Println(i, j)
 						fmt.Println(rand_i, rand_j)
 						isFind = true
@@ -234,9 +244,12 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 						case j < rand_j:
 
 							for ; j < rand_j; j++ {
-								thisField.cells[i][j].status = SHIP
-								thisField.cells[i][j].ship = thisShip
 								thisShip.orientation = HORIZONTAL
+								f.cells[i][j] = NewCell(thisShip, SHIP)
+								/*
+									f.cells[i][j].status = SHIP
+									f.cells[i][j].ship = thisShip
+								*/
 							}
 							thisShip.x = j
 							thisShip.y = i
@@ -247,9 +260,12 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 							thisShip.y = i
 							fmt.Println("координаты идём влево", i, j)
 							for ; j > rand_j; j-- {
-								thisField.cells[i][j].status = SHIP
-								thisField.cells[i][j].ship = thisShip
 								thisShip.orientation = HORIZONTAL
+								f.cells[i][j] = NewCell(thisShip, SHIP)
+								/*
+									thisField.cells[i][j].status = SHIP
+									thisField.cells[i][j].ship = thisShip
+								*/
 							}
 
 							//здесь записывать координаты
@@ -273,46 +289,50 @@ func ShipBuilder(thisShip *shipImpl, thisField *field) { //rename to
 		thisShip.x = rand_j
 		thisShip.y = rand_i
 	}
-	thisField.cells[rand_i][rand_j].ship = thisShip
-	thisField.cells[rand_i][rand_j].status = SHIP
-	PointAround(thisField, thisShip)
+
+	f.cells[rand_i][rand_j] = NewCell(thisShip, SHIP)
+	/*
+		thisField.cells[rand_i][rand_j].ship = thisShip
+		thisField.cells[rand_i][rand_j].status = SHIP
+	*/
+	PointAround(f, thisShip)
 
 }
 
-func PointAround(thisField *field, thisShip *shipImpl) {
+func PointAround(f *field, thisShip *shipImpl) {
 	this_i := thisShip.y
 	j := thisShip.x
 	fmt.Println(thisShip)
 	switch {
 	case thisShip.orientation == VERTICAL:
-		if this_i+1 != len(thisField.cells) {
-			thisField.cells[this_i+1][j].status = NEAR_SHIP
+		if this_i+1 != len(f.cells) {
+			f.cells[this_i+1][j].status = NEAR_SHIP
 			fmt.Println("вертикальный")
 			if j-1 != -1 { //ставим на диагональные квадраты
-				thisField.cells[this_i+1][j-1].status = NEAR_SHIP
+				f.cells[this_i+1][j-1].status = NEAR_SHIP
 			}
-			if j+1 != len(thisField.cells) {
-				thisField.cells[this_i+1][j+1].status = NEAR_SHIP
+			if j+1 != len(f.cells) {
+				f.cells[this_i+1][j+1].status = NEAR_SHIP
 			}
 
 		}
 		for lenShip := len(thisShip.decks); lenShip > 0; lenShip-- {
 
-			if j+1 != len(thisField.cells) {
-				thisField.cells[this_i][j+1].status = NEAR_SHIP
+			if j+1 != len(f.cells) {
+				f.cells[this_i][j+1].status = NEAR_SHIP
 			}
 			if j-1 != -1 {
-				thisField.cells[this_i][j-1].status = NEAR_SHIP
+				f.cells[this_i][j-1].status = NEAR_SHIP
 			}
 			if this_i-1 != -1 {
 				this_i--
-				if thisField.cells[this_i][j].status != SHIP {
-					thisField.cells[this_i][j].status = NEAR_SHIP
+				if f.cells[this_i][j].status != SHIP {
+					f.cells[this_i][j].status = NEAR_SHIP
 					if j-1 != -1 { //ставим на диагональные квадраты
-						thisField.cells[this_i][j-1].status = NEAR_SHIP
+						f.cells[this_i][j-1].status = NEAR_SHIP
 					}
-					if j+1 != len(thisField.cells) {
-						thisField.cells[this_i][j+1].status = NEAR_SHIP
+					if j+1 != len(f.cells) {
+						f.cells[this_i][j+1].status = NEAR_SHIP
 					}
 				}
 			}
@@ -323,34 +343,34 @@ func PointAround(thisField *field, thisShip *shipImpl) {
 	case thisShip.orientation == HORIZONTAL:
 		fmt.Println("горизонтальный")
 		//this_j := j
-		if j+1 != len(thisField.cells) {
-			thisField.cells[this_i][j+1].status = NEAR_SHIP
+		if j+1 != len(f.cells) {
+			f.cells[this_i][j+1].status = NEAR_SHIP
 
 			if this_i-1 != -1 { //ставим на диагональные квадраты
-				thisField.cells[this_i-1][j+1].status = NEAR_SHIP
+				f.cells[this_i-1][j+1].status = NEAR_SHIP
 			}
-			if this_i+1 != len(thisField.cells) {
-				thisField.cells[this_i+1][j+1].status = NEAR_SHIP
+			if this_i+1 != len(f.cells) {
+				f.cells[this_i+1][j+1].status = NEAR_SHIP
 			}
 
 		}
 		for lenShip := len(thisShip.decks); lenShip > 0; lenShip-- {
 
-			if this_i+1 != len(thisField.cells) {
-				thisField.cells[this_i+1][j].status = NEAR_SHIP
+			if this_i+1 != len(f.cells) {
+				f.cells[this_i+1][j].status = NEAR_SHIP
 			}
 			if this_i-1 != -1 {
-				thisField.cells[this_i-1][j].status = NEAR_SHIP
+				f.cells[this_i-1][j].status = NEAR_SHIP
 			}
 			if j-1 != -1 {
 				j--
-				if thisField.cells[this_i][j].status != SHIP {
-					thisField.cells[this_i][j].status = NEAR_SHIP
+				if f.cells[this_i][j].status != SHIP {
+					f.cells[this_i][j].status = NEAR_SHIP
 					if this_i-1 != -1 { //ставим на диагональные квадраты
-						thisField.cells[this_i-1][j].status = NEAR_SHIP
+						f.cells[this_i-1][j].status = NEAR_SHIP
 					}
-					if this_i+1 != len(thisField.cells) {
-						thisField.cells[this_i+1][j].status = NEAR_SHIP
+					if this_i+1 != len(f.cells) {
+						f.cells[this_i+1][j].status = NEAR_SHIP
 					}
 				}
 			}
@@ -360,27 +380,27 @@ func PointAround(thisField *field, thisShip *shipImpl) {
 
 }
 
-func CheckField(thisField *field, i int, j int) bool { //проверяем поля для правильности размещения кораблей
+func CheckField(f *field, i int, j int) bool { //проверяем поля для правильности размещения кораблей
 	checkPoint := true
 
 	check_i := i - 1
 	check_j := j - 1
 	if check_i == -1 { //проверяем края полей
 		check_i++
-	} else if i == len(thisField.cells)-1 {
+	} else if i == len(f.cells)-1 {
 
 		i--
 	}
 	if check_j == -1 {
 		check_j++
-	} else if j == len(thisField.cells)-1 {
+	} else if j == len(f.cells)-1 {
 
 		j--
 	}
 
 	for min_i := check_i; min_i <= i+1; min_i++ {
 		for min_j := check_j; min_j <= j+1; min_j++ {
-			if thisField.cells[min_i][min_j].status == SHIP {
+			if f.cells[min_i][min_j].status == SHIP {
 				checkPoint = false
 
 				return checkPoint
@@ -424,29 +444,71 @@ func DrawField(f *field) {
 	}
 }
 
-func (thisField *field) shot(i, j int) ShotResult { //return shotResult?
+func FieldToDraw(fieldSize int) [][]string {
+	playerField := make([][]string, 0, fieldSize)
+	for i := 0; i < fieldSize; i++ {
+		arr := make([]string, 0, fieldSize)
+		playerField = append(playerField, arr)
+		for j := 0; j < fieldSize; j++ {
+			playerField[i] = append(playerField[i], "#")
+		}
+	}
+	return playerField
+}
+
+func (f *field) DrawPlayerField(playerField [][]string) {
+
+	for i := 0; i < len(f.cells); i++ {
+		for j := 0; j < len(f.cells); j++ {
+			if f.cells[i][j].status == FREE {
+				playerField[i][j] = "#"
+			}
+			if f.cells[i][j].status == NEAR_SHIP || f.cells[i][j].status == SHOT {
+				playerField[i][j] = "X"
+			}
+			if f.cells[i][j].status == SHIP {
+				playerField[i][j] = "□"
+			}
+			if f.cells[i][j].status == ATTACKED {
+				playerField[i][j] = "⧆"
+			}
+
+		}
+		fmt.Println(playerField[i])
+	}
+}
+
+func (f *field) shot(i, j int) ShotResult { //return shotResult?
 	var resultOfShot ShotResult
+	fmt.Println("проверка")
+	fmt.Println("f.cells[i][j].status", f.cells)
+
 	// здесь обработка выстрела
-	if thisField.cells[i][j].status == FREE {
-		thisField.cells[i][j].status = SHOT
+	if f.cells[i][j].status == FREE || f.cells[i][j].status == NEAR_SHIP {
+		fmt.Println("проверка 1")
+		f.cells[i][j].status = SHOT
 		resultOfShot = MISS
+		fmt.Println("проверка 1")
+		fmt.Println(resultOfShot)
 		return resultOfShot
 	}
-	if thisField.cells[i][j].status == SHIP {
-		thisField.cells[i][j].status = ATTACKED
-		if thisField.cells[i][j].ship.health-1 > 0 {
-			thisField.cells[i][j].ship.health--
+	if f.cells[i][j].status == SHIP {
+		f.cells[i][j].status = ATTACKED
+		fmt.Println("проверка2")
+		if f.cells[i][j].ship.health-1 > 0 {
+			f.cells[i][j].ship.health--
 			resultOfShot = HIT
 			return resultOfShot
 		} else {
-			thisField.cells[i][j].ship.health--
-			PointAround(thisField, thisField.cells[i][j].ship)
+			fmt.Println("проверка3")
+			f.cells[i][j].ship.health--
+			PointAround(f, f.cells[i][j].ship)
 			resultOfShot = SINK
 			return resultOfShot
 		}
 
 	}
-
+	fmt.Println("выход")
 	return MISS
 }
 
@@ -460,12 +522,14 @@ func main() {
 	p1Field = NewField(10)
 	p2Field := new(field)
 	p2Field = NewField(10)
-
+	ShipCreating(p1Field)
+	ShipCreating(p2Field)
 	p1 = NewPlayer("Player", p2, p1Field)
 	p2 = NewPlayer("Bot", p1, p2Field)
-	ShipCreating(p1Field)
+
 	game := NewGame(p1, p2, p1)
 	DrawField(p1Field)
+	DrawField(p2Field)
 
 	// старт сервера
 	for {
@@ -484,25 +548,27 @@ func main() {
 }
 
 func ValidateAndParse(input string, game *game) (cmdHandler, error) {
+	pfield := FieldToDraw(10)
 	if len(input) < 2 {
 		return nil, fmt.Errorf("string length should be > 2")
 	}
 
 	switch input {
 	case "status":
-		// todo
-		// return
+		game.player1.playerField.DrawPlayerField(pfield)
+
+		return nil, fmt.Errorf("status was checked") //???
 	}
 
 	// todo make extensible
-	/*
-		if err := ValidateShoot(input); err != nil {
-			return nil, err
-		} else {
-			return game.HandleShoot, nil
-		}
-	*/
-	return nil, fmt.Errorf("unknown command")
+
+	if err := ValidateShoot(input); err != nil {
+		return nil, err
+	} else {
+		return game.HandleShoot, nil
+	}
+
+	//return nil, fmt.Errorf("unknown command")
 }
 
 // ValidateShoot валидация команды выстрела
@@ -540,12 +606,15 @@ func NewPlayer(name string, enemy *player, f *field) *player {
 }
 
 func (p *player) doMove(x, y int) (result ShotResult, fieldAfterShot *field) {
+	fmt.Println("nil? ", fieldAfterShot)
 	result, fieldAfterShot = p.enemy.getShot(x, y)
-	return
+	fmt.Println(result, fieldAfterShot)
+	return result, fieldAfterShot
 }
 
 func (p *player) getShot(x, y int) (result ShotResult, fieldAfterShot *field) {
 	res := p.playerField.shot(x, y)
+	fmt.Println("nil2? ", res, p.playerField)
 	return res, p.playerField
 }
 
@@ -557,11 +626,20 @@ type game struct {
 }
 
 func (g *game) HandleShoot(input string) string {
-	x := rune(input[0])
+	//x := rune(input[0])
+	x := int([]rune(input)[0] - []rune("a")[0])
+	//x, _ := strconv.Atoi(input[:1])
+	fmt.Println("X", x)
 	y, _ := strconv.Atoi(input[1:])
-
-	res, field := g.currentPlayer.doMove(x, y)
+	fmt.Println("y", y)
+	res, field := g.currentPlayer.doMove(y, x)
+	fmt.Println(field)
 	// todo преобразовать в строковое представление и вернуть
+	if res == SINK {
+		return "ранен"
+	}
+	fmt.Println("return", y)
+	return input
 }
 
 func NewGame(p1, p2, curr *player) *game {
