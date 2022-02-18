@@ -114,13 +114,12 @@ func (*shipImpl) GetShot(x, y int) {
 
 //массив имён //перемешать в случайном порядке
 // TODO создавать в цикле согласно указанному флоу
-func ShipCreating(f *field) { //CreateShips
+func (f *field) FillWithRandomShips() { //CreateShips
 	for i := 0; i < 4; i++ {
 		for j := i; j < 4; j++ {
 			for {
 				s := NewShip("Arnold", i+1, i+1)
-
-				f.AddShip(s)
+				f.AddShipIfFits(s)
 
 				break
 
@@ -165,7 +164,7 @@ func ShipCreating(f *field) { //CreateShips
 
 }
 
-func (f *field) AddShip(thisShip *shipImpl) { //rename to
+func (f *field) AddShipIfFits(thisShip *shipImpl) { //rename to
 	var rand_i, rand_j int
 	isFind := false
 	shipSize := len(thisShip.decks) - 1 // для прохождения по нужному количеству клеток
@@ -179,8 +178,8 @@ func (f *field) AddShip(thisShip *shipImpl) { //rename to
 
 			rand_i = rand.Intn(10)
 			rand_j = rand.Intn(10)
-
 		}
+
 		fmt.Println(CheckField(f, rand_i, rand_j))
 
 		for i := rand_i - shipSize; i <= rand_i+shipSize; i += shipSize { // делаем проверку для второго отсека корабля (сверху вниз)
@@ -481,8 +480,9 @@ func (f *field) DrawPlayerField(playerField [][]string) {
 func (f *field) shot(i, j int) ShotResult { //return shotResult?
 	var resultOfShot ShotResult
 	fmt.Println("проверка")
-	fmt.Println("f.cells[i][j].status", f.cells)
+	// fmt.Println("f.cells[i][j].status", f.cells)
 
+	fmt.Println("dadada", f)
 	// здесь обработка выстрела
 	if f.cells[i][j].status == FREE || f.cells[i][j].status == NEAR_SHIP {
 		fmt.Println("проверка 1")
@@ -516,20 +516,19 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	s := bufio.NewScanner(os.Stdin)
 
-	p1 := &player{}
-	p2 := &player{}
-	p1Field := new(field)
-	p1Field = NewField(10)
-	p2Field := new(field)
-	p2Field = NewField(10)
-	ShipCreating(p1Field)
-	ShipCreating(p2Field)
-	p1 = NewPlayer("Player", p2, p1Field)
-	p2 = NewPlayer("Bot", p1, p2Field)
+	var m map[int]int
+	fmt.Println(m)
+
+	f1 := NewField(10)
+	f2 := NewField(10)
+	f1.FillWithRandomShips()
+	f2.FillWithRandomShips()
+
+	p1 := NewPlayerNoEnemy("Player", f1)
+	p2 := NewPlayer("Bot", p1, f2)
+	p1.enemy = p2
 
 	game := NewGame(p1, p2, p1)
-	DrawField(p1Field)
-	DrawField(p2Field)
 
 	// старт сервера
 	for {
@@ -548,16 +547,13 @@ func main() {
 }
 
 func ValidateAndParse(input string, game *game) (cmdHandler, error) {
-	pfield := FieldToDraw(10)
 	if len(input) < 2 {
 		return nil, fmt.Errorf("string length should be > 2")
 	}
 
 	switch input {
 	case "status":
-		game.player1.playerField.DrawPlayerField(pfield)
-
-		return nil, fmt.Errorf("status was checked") //???
+		return game.HandleStatus, nil
 	}
 
 	// todo make extensible
@@ -602,7 +598,14 @@ func NewPlayer(name string, enemy *player, f *field) *player {
 		stepsCount:  0,
 		playerField: f,
 	}
+}
 
+func NewPlayerNoEnemy(name string, f *field) *player {
+	return &player{
+		name:        name,
+		stepsCount:  0,
+		playerField: f,
+	}
 }
 
 func (p *player) doMove(x, y int) (result ShotResult, fieldAfterShot *field) {
@@ -640,6 +643,14 @@ func (g *game) HandleShoot(input string) string {
 	}
 	fmt.Println("return", y)
 	return input
+}
+
+func (g *game) HandleStatus(input string) string {
+	pfield := FieldToDraw(10)
+	g.player1.playerField.DrawPlayerField(pfield)
+
+	// todo преобразовать в string
+	return ""
 }
 
 func NewGame(p1, p2, curr *player) *game {
