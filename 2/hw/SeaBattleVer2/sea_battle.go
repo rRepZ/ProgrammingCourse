@@ -4,7 +4,7 @@ package main
 // TODO не мутировать состояния по ходу действия программы, инициализировать новые объекты
 // TODO отрефакторить main, чтобы соответствовать тому как я написал
 // TODO убрать принты по ходу программы
-// TODO имена переменных использовать краткие, ёмкие, не использовать snake_case(rand_j) => randJ, thisField => field или f
+// TODO имена переменных использовать краткие, ёмкие, не использовать snake_case(jRand) => randJ, f => field или f
 // TODO быть уверенным, что используются все конструкторы(NewField, NewCell)
 // TODO избавиться от повисших в воздухе функций, всё сделать методами
 // TODO начать переписывать на интерфейсы
@@ -33,7 +33,6 @@ type CellStatus int
 
 const (
 	FREE CellStatus = iota
-	// todo чем shot отличается от attacked?
 	SHOT
 	SHIP
 	NEAR_SHIP
@@ -48,6 +47,10 @@ const (
 )
 
 type DeckStatus int
+
+const (
+	fSize = 10
+)
 
 const (
 	OK DeckStatus = iota
@@ -78,7 +81,7 @@ type Ship interface {
 }
 */
 type ShipNames struct {
-	Ships [][]string `json:"ships"`
+	Ships []string `json:"ships"`
 }
 
 type shipImpl struct {
@@ -93,18 +96,18 @@ type shipImpl struct {
 // todo
 func NewShip(name string /*x, y int,*/, shipSize int, hp int) *shipImpl { //подумать над shipSize
 	// some code
-	thisShip := new(shipImpl)
-	thisShip.name = name
-	thisShip.health = hp
-	//thisShip.x = x
-	//thisShip.y = y
+	s := new(shipImpl)
+	s.name = name
+	s.health = hp
+	//s.x = x
+	//s.y = y
 	for i := 0; i < shipSize; i++ {
-		thisShip.decks = append(thisShip.decks, i)
+		s.decks = append(s.decks, i)
 	}
 	return &shipImpl{
-		name:   thisShip.name,
-		decks:  thisShip.decks,
-		health: thisShip.health,
+		name:   s.name,
+		decks:  s.decks,
+		health: s.health,
 	}
 }
 
@@ -127,91 +130,84 @@ func (f *field) FillWithRandomShips() { //CreateShips
 		log.Fatalf("Can't read file: %s", err)
 		return
 	}
-	var elSh ShipNames
-	err = json.Unmarshal(dataShip, &elSh)
+	var ships ShipNames
+	err = json.Unmarshal(dataShip, &ships)
 	if err != nil {
 		log.Fatalf("Marshal error: %s", err)
 		return
 	}
-	setCheck := true
-	for i := 0; i < 4; i++ {
+	for i := 3; i >= 0; i-- {
 		for j := i; j < 4; j++ {
 			for {
-				s := NewShip(elSh.Ships[i][j], i+1, i+1)
-				setCheck = f.AddShipIfFits(s)
+				s := NewShip(ships.Ships[f.shipsOnField], i+1, i+1)
+				f.AddShipIfFits(s)
 				f.shipsOnField++
 				break
 
 			}
 		}
-		if !setCheck {
-			i = 0
-			f = NewField(10)
-			setCheck = true
-			fmt.Println("Поле было пересоздано! ")
-		}
 	}
 
 }
 
-func (f *field) AddShipIfFits(thisShip *shipImpl) bool { //rename to
-	cantSet := 0 // проверка возможности размещения
-	var rand_i, rand_j int
+func (f *field) AddShipIfFits(s *shipImpl) { //rename to
+
+	var iRand, jRand int
 	isFind := false
-	shipSize := len(thisShip.decks) - 1 // для прохождения по нужному количеству клеток
+	shipSize := len(s.decks) - 1 // для прохождения по нужному количеству клеток
 	//for i := 0; i < 1; i++ {
 	for isFind == false {
 
-		rand_i = rand.Intn(10)
-		rand_j = rand.Intn(10)
+		iRand = rand.Intn(fSize)
+		jRand = rand.Intn(fSize)
 		fmt.Println("вошли")
-		for !CheckField(f, rand_i, rand_j) {
-			fmt.Println(CheckField(f, rand_i, rand_j))
+		for !CheckField(f, iRand, jRand) {
+			fmt.Println(CheckField(f, iRand, jRand))
 
-			rand_i = rand.Intn(10)
-			rand_j = rand.Intn(10)
+			iRand = rand.Intn(fSize)
+			jRand = rand.Intn(fSize)
 		}
 
-		fmt.Println(CheckField(f, rand_i, rand_j))
-		fmt.Println(rand_i, rand_j)
-		debugField := FieldToDraw(10)
+		fmt.Println(CheckField(f, iRand, jRand))
+		fmt.Println(iRand, jRand)
+		debugField := FieldToDraw(fSize)
 		f.DrawPlayerField(debugField, false)
-		for i := rand_i - shipSize; i <= rand_i+shipSize; i += shipSize { // делаем проверку для второго отсека корабля (сверху вниз)
+		for i := iRand - shipSize; i <= iRand+shipSize; i += shipSize { // делаем проверку для второго отсека корабля (сверху вниз)
 			if i >= len(f.cells) { //i стало равно 10 (выход за пределы поля)
 
 				break //выход, дальше некуда итерировать
 			}
 			if i <= -1 { //проверка выхода за область
-				i = rand_i //чтобы проверить с правого конца (для больших кораблей)
+				i = iRand //чтобы проверить с правого конца (для больших кораблей)
 			}
 
 			switch {
-			case i != rand_i:
-				//j := rarand_j //когда просмтариваем сверху или снизу, то j статична
-				if CheckField(f, i, rand_j) == true {
+			case i != iRand:
+				//j := rajRand //когда просмтариваем сверху или снизу, то j статична
+				if CheckField(f, i, jRand) == true {
 					isFind = true
 					switch {
-					case i < rand_i:
-						for ; i < rand_i; i++ {
+					case i < iRand:
+						for ; i < iRand; i++ {
 							// todo не мутировать состояние ячейки, создавать всегда новую
-							thisShip.orientation = VERTICAL
-							f.cells[i][rand_j] = NewCell(thisShip, SHIP)
-							//thisField.cells[i][rand_j].status = SHIP
-							//thisField.cells[i][rand_j].ship = thisShip
-							//thisShip.orientation = VERTICAL
+							s.orientation = VERTICAL
+							f.cells[i][jRand] = NewCell(s, SHIP)
+							//f.cells[i][jRand].status = SHIP
+							//f.cells[i][jRand].ship = s
+							//s.orientation = VERTICAL
 						}
-						thisShip.x = rand_j
-						thisShip.y = i
+						s.x = jRand
+						s.y = i
 
-					case i > rand_i:
-						thisShip.x = rand_j
-						thisShip.y = i
-						for ; i > rand_i; i-- {
-							thisShip.orientation = VERTICAL
-							f.cells[i][rand_j] = NewCell(thisShip, SHIP)
+					case i > iRand:
+						s.x = jRand
+						s.y = i
+						for ; i > iRand; i-- {
+							s.orientation = VERTICAL
+							f.cells[i][jRand] = NewCell(s, SHIP)
 							/*
-								thisField.cells[i][rand_j].status = SHIP
-								thisField.cells[i][rand_j].ship = thisShip
+								f.cells[i][jRand].status = SHIP
+								f.cells[i][jRand].ship = s
 							*/
 						}
 					}
@@ -219,11 +215,11 @@ func (f *field) AddShipIfFits(thisShip *shipImpl) bool { //rename to
 					break
 				}
 
-			case i == rand_i:
-				for j := rand_j - shipSize; j <= rand_j+shipSize; j += 2 * shipSize {
+			case i == iRand:
+				for j := jRand - shipSize; j <= jRand+shipSize; j += 2 * shipSize {
 
 					if j <= -1 {
-						j = rand_j + shipSize
+						j = jRand + shipSize
 					}
 					if j >= len(f.cells) { //когда проверяет границы
 						break
@@ -231,33 +227,33 @@ func (f *field) AddShipIfFits(thisShip *shipImpl) bool { //rename to
 
 					if CheckField(f, i, j) == true {
 						fmt.Println(i, j)
-						fmt.Println(rand_i, rand_j)
+						fmt.Println(iRand, jRand)
 						isFind = true
 						switch {
-						case j < rand_j:
+						case j < jRand:
 
-							for ; j < rand_j; j++ {
-								thisShip.orientation = HORIZONTAL
-								f.cells[i][j] = NewCell(thisShip, SHIP)
+							for ; j < jRand; j++ {
+								s.orientation = HORIZONTAL
+								f.cells[i][j] = NewCell(s, SHIP)
 								/*
 									f.cells[i][j].status = SHIP
-									f.cells[i][j].ship = thisShip
+									f.cells[i][j].ship = s
 								*/
 							}
-							thisShip.x = j
-							thisShip.y = i
+							s.x = j
+							s.y = i
 							fmt.Println("координаты (идём вправо)", i, j)
 							//fmt.Println("координаты", i, j)
-						case j > rand_j:
-							thisShip.x = j
-							thisShip.y = i
+						case j > jRand:
+							s.x = j
+							s.y = i
 							fmt.Println("координаты идём влево", i, j)
-							for ; j > rand_j; j-- {
-								thisShip.orientation = HORIZONTAL
-								f.cells[i][j] = NewCell(thisShip, SHIP)
+							for ; j > jRand; j-- {
+								s.orientation = HORIZONTAL
+								f.cells[i][j] = NewCell(s, SHIP)
 								/*
-									thisField.cells[i][j].status = SHIP
-									thisField.cells[i][j].ship = thisShip
+									f.cells[i][j].status = SHIP
+									f.cells[i][j].ship = s
 								*/
 							}
 
@@ -276,34 +272,28 @@ func (f *field) AddShipIfFits(thisShip *shipImpl) bool { //rename to
 			}
 
 		}
-		cantSet++
-		if cantSet > 100 {
-			fmt.Println("Невозможно рамзместить! ")
-			return false
-		}
 
 	}
-	if len(thisShip.decks) == 1 {
-		thisShip.x = rand_j
-		thisShip.y = rand_i
+	if len(s.decks) == 1 {
+		s.x = jRand
+		s.y = iRand
 	}
 
-	f.cells[rand_i][rand_j] = NewCell(thisShip, SHIP)
-	return true
+	f.cells[iRand][jRand] = NewCell(s, SHIP)
 	/*
-		thisField.cells[rand_i][rand_j].ship = thisShip
-		thisField.cells[rand_i][rand_j].status = SHIP
+		f.cells[iRand][jRand].ship = s
+		f.cells[iRand][jRand].status = SHIP
 	*/
-	//PointAround(f, thisShip)
+	//PointAround(f, s)
 
 }
 
-func PointAround(f *field, thisShip *shipImpl) {
-	this_i := thisShip.y
-	j := thisShip.x
-	fmt.Println(thisShip)
+func (f *field) pointAround(s *shipImpl) {
+	this_i := s.y
+	j := s.x
+	fmt.Println(s)
 	switch {
-	case thisShip.orientation == VERTICAL:
+	case s.orientation == VERTICAL:
 		if this_i+1 != len(f.cells) {
 			f.cells[this_i+1][j].status = NEAR_SHIP
 			fmt.Println("вертикальный")
@@ -315,7 +305,7 @@ func PointAround(f *field, thisShip *shipImpl) {
 			}
 
 		}
-		for lenShip := len(thisShip.decks); lenShip > 0; lenShip-- {
+		for lenShip := len(s.decks); lenShip > 0; lenShip-- {
 
 			if j+1 != len(f.cells) {
 				f.cells[this_i][j+1].status = NEAR_SHIP
@@ -337,9 +327,9 @@ func PointAround(f *field, thisShip *shipImpl) {
 			}
 		}
 
-		this_i = thisShip.y
-		j = thisShip.x
-	case thisShip.orientation == HORIZONTAL:
+		this_i = s.y
+		j = s.x
+	case s.orientation == HORIZONTAL:
 		fmt.Println("горизонтальный")
 		//this_j := j
 		if j+1 != len(f.cells) {
@@ -353,7 +343,7 @@ func PointAround(f *field, thisShip *shipImpl) {
 			}
 
 		}
-		for lenShip := len(thisShip.decks); lenShip > 0; lenShip-- {
+		for lenShip := len(s.decks); lenShip > 0; lenShip-- {
 
 			if this_i+1 != len(f.cells) {
 				f.cells[this_i+1][j].status = NEAR_SHIP
@@ -375,7 +365,7 @@ func PointAround(f *field, thisShip *shipImpl) {
 			}
 		}
 	}
-	//return thisField
+	//return f
 
 }
 
@@ -420,17 +410,17 @@ type field struct {
 
 func NewField(fieldSize int) *field {
 
-	thisField := new(field)
-	thisField.cells = make([][]*cell, 0, fieldSize)
+	f := new(field)
+	f.cells = make([][]*cell, 0, fieldSize)
 	for i := 0; i < fieldSize; i++ {
 		arr := make([]*cell, 0, fieldSize)
-		thisField.cells = append(thisField.cells, arr)
+		f.cells = append(f.cells, arr)
 		for j := 0; j < fieldSize; j++ {
-			thisField.cells[i] = append(thisField.cells[i], new(cell))
+			f.cells[i] = append(f.cells[i], new(cell))
 		}
 	}
 	return &field{
-		cells:        thisField.cells,
+		cells:        f.cells,
 		shipsOnField: 0,
 	}
 }
@@ -464,17 +454,19 @@ func (f *field) DrawPlayerField(playerField [][]string, isHidden bool) {
 		for i := 0; i < len(f.cells); i++ {
 			fmt.Printf("%d", i)
 			for j := 0; j < len(f.cells); j++ {
-				if f.cells[i][j].status == FREE {
+				switch {
+				case f.cells[i][j].status == FREE:
 					playerField[i][j] = "#"
-				}
-				if f.cells[i][j].status == NEAR_SHIP || f.cells[i][j].status == SHOT {
+
+				case f.cells[i][j].status == NEAR_SHIP || f.cells[i][j].status == SHOT:
 					playerField[i][j] = "X"
-				}
-				if f.cells[i][j].status == SHIP {
+
+				case f.cells[i][j].status == SHIP:
 					playerField[i][j] = "□"
-				}
-				if f.cells[i][j].status == ATTACKED {
+
+				case f.cells[i][j].status == ATTACKED:
 					playerField[i][j] = "⧆"
+
 				}
 
 			}
@@ -529,7 +521,7 @@ func (f *field) shot(i, j int) ShotResult { //return shotResult?
 		} else {
 
 			f.cells[i][j].ship.health--
-			PointAround(f, f.cells[i][j].ship)
+			f.pointAround(f.cells[i][j].ship)
 			resultOfShot = SINK
 			return resultOfShot
 		}
@@ -543,8 +535,8 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	s := bufio.NewScanner(os.Stdin)
 
-	f1 := NewField(10)
-	f2 := NewField(10)
+	f1 := NewField(fSize)
+	f2 := NewField(fSize)
 	f1.FillWithRandomShips()
 	f2.FillWithRandomShips()
 
@@ -553,7 +545,7 @@ func main() {
 	p1.enemy = p2
 
 	game := NewGame(p1, p2, p1)
-	enemyF := FieldToDraw(10)
+	enemyF := FieldToDraw(fSize)
 
 	var cmd, output string
 
@@ -561,23 +553,23 @@ func main() {
 	for {
 		isContinue := true
 		for isContinue {
-			if game.currentPlayer.name != "Bot" {
-				fmt.Println("")
-				game.player2.playerField.DrawPlayerField(enemyF, true)
+			//if game.currentPlayer.name != "Bot" {
+			fmt.Println("")
+			game.player2.playerField.DrawPlayerField(enemyF, true)
 
-				s.Scan()
-				cmd = s.Text()
+			s.Scan()
+			cmd = s.Text()
 
-				handler, err := ValidateAndParse(cmd, game)
-				if err != nil {
-					fmt.Printf("invalid input: %s \n", err.Error())
-					continue
-				}
-
-				output = handler(cmd)
-			} else {
-				output = game.HandleShoot("")
+			handler, err := ValidateAndParse(cmd, game)
+			if err != nil {
+				fmt.Printf("invalid input: %s \n", err.Error())
+				continue
 			}
+
+			output = handler(cmd)
+			//} else {
+			//	output = game.HandleShoot("")
+			//}
 			fmt.Println(output)
 
 			if output == "Промах!" {
@@ -588,15 +580,18 @@ func main() {
 				return
 			}
 		}
-		switch {
-		case game.currentPlayer == p1:
-			game.currentPlayer = p2
-			break
-		case game.currentPlayer == p2:
-			game.currentPlayer = p1
-			break
-		}
+		game.SwitchPlayer(p1, p2)
+	}
+}
 
+func (g *game) SwitchPlayer(p1 *player, p2 *player) {
+	switch {
+	case g.currentPlayer == p1:
+		g.currentPlayer = p2
+		break
+	case g.currentPlayer == p2:
+		g.currentPlayer = p1
+		break
 	}
 }
 
@@ -688,26 +683,26 @@ type game struct {
 
 func (g *game) HandleShoot(input string) string {
 	var x, y int
-	if g.currentPlayer.name != "Bot" {
-		x = int([]rune(input)[0] - []rune("a")[0])
-		//x, _ := strconv.Atoi(input[:1])
-		fmt.Println("X", x)
-		y, _ = strconv.Atoi(input[1:])
-		fmt.Println("Y", y)
-	} else {
+	//if g.currentPlayer.name != "Bot" {
+	x = int([]rune(input)[0] - []rune("a")[0])
+	//x, _ := strconv.Atoi(input[:1])
+	fmt.Println("X", x)
+	y, _ = strconv.Atoi(input[1:])
+	fmt.Println("Y", y)
+	/*	} else {
 		fmt.Println("Ход бота ", y)
-		x = rand.Intn(10)
-		y = rand.Intn(10)
+		x = rand.Intn(fSize)
+		y = rand.Intn(fSize)
 		for g.currentPlayer.enemy.playerField.cells[y][x].status != FREE && g.currentPlayer.enemy.playerField.cells[y][x].status != SHIP {
-			x = rand.Intn(10)
-			y = rand.Intn(10)
+			x = rand.Intn(fSize)
+			y = rand.Intn(fSize)
 		}
-	}
+	}*/
 	res, _ := g.currentPlayer.doMove(y, x) //res, fiels
 	//.Println(field)
 	// todo преобразовать в строковое представление и вернуть
 	if res == SINK {
-		PointAround(g.currentPlayer.enemy.playerField, g.currentPlayer.enemy.playerField.cells[y][x].ship)
+		//g.currentPlayer.enemy.playerField.pointAround(g.currentPlayer.enemy.playerField.cells[y][x].ship)
 		g.currentPlayer.enemy.playerField.shipsOnField--
 		fmt.Println(g.currentPlayer.enemy.playerField.cells[y][x].ship.name)
 		if g.currentPlayer.enemy.playerField.shipsOnField == 0 {
@@ -727,7 +722,7 @@ func (g *game) HandleShoot(input string) string {
 }
 
 func (g *game) HandleStatus(input string) string {
-	pfield := FieldToDraw(10)
+	pfield := FieldToDraw(fSize)
 	g.player1.playerField.DrawPlayerField(pfield, false)
 
 	// todo преобразовать в string
