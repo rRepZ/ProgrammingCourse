@@ -49,7 +49,7 @@ const (
 type DeckStatus int
 
 const (
-	fSize = 10
+	fSize int = 10
 )
 
 const (
@@ -80,6 +80,7 @@ type Ship interface {
 	// и так далее...
 }
 */
+
 type ShipNames struct {
 	Ships []string `json:"ships"`
 }
@@ -93,21 +94,16 @@ type shipImpl struct {
 	health      int
 }
 
-// todo
-func NewShip(name string /*x, y int,*/, shipSize int, hp int) *shipImpl { //подумать над shipSize
-	// some code
-	s := new(shipImpl)
-	s.name = name
-	s.health = hp
-	//s.x = x
-	//s.y = y
+func NewShip(name string, shipSize int, hp int) *shipImpl { //подумать над shipSize
+	decks := make([]int, 0, shipSize)
 	for i := 0; i < shipSize; i++ {
-		s.decks = append(s.decks, i)
+		decks = append(decks, i)
 	}
+
 	return &shipImpl{
-		name:   s.name,
-		decks:  s.decks,
-		health: s.health,
+		name:   name,
+		decks:  decks,
+		health: hp,
 	}
 }
 
@@ -151,13 +147,11 @@ func (f *field) FillWithRandomShips() { //CreateShips
 }
 
 func (f *field) AddShipIfFits(s *shipImpl) { //rename to
-
 	var iRand, jRand int
-	isFind := false
+	freeSpaceForShip := false
 	shipSize := len(s.decks) - 1 // для прохождения по нужному количеству клеток
-	//for i := 0; i < 1; i++ {
-	for isFind == false {
 
+	for !freeSpaceForShip {
 		iRand = rand.Intn(fSize)
 		jRand = rand.Intn(fSize)
 		fmt.Println("вошли")
@@ -174,9 +168,9 @@ func (f *field) AddShipIfFits(s *shipImpl) { //rename to
 		f.DrawPlayerField(debugField, false)
 		for i := iRand - shipSize; i <= iRand+shipSize; i += shipSize { // делаем проверку для второго отсека корабля (сверху вниз)
 			if i >= len(f.cells) { //i стало равно 10 (выход за пределы поля)
-
 				break //выход, дальше некуда итерировать
 			}
+
 			if i <= -1 { //проверка выхода за область
 				i = iRand //чтобы проверить с правого конца (для больших кораблей)
 			}
@@ -185,7 +179,7 @@ func (f *field) AddShipIfFits(s *shipImpl) { //rename to
 			case i != iRand:
 				//j := rajRand //когда просмтариваем сверху или снизу, то j статична
 				if CheckField(f, i, jRand) == true {
-					isFind = true
+					freeSpaceForShip = true
 					switch {
 					case i < iRand:
 						for ; i < iRand; i++ {
@@ -228,36 +222,22 @@ func (f *field) AddShipIfFits(s *shipImpl) { //rename to
 					if CheckField(f, i, j) == true {
 						fmt.Println(i, j)
 						fmt.Println(iRand, jRand)
-						isFind = true
+						freeSpaceForShip = true
 						switch {
 						case j < jRand:
-
 							for ; j < jRand; j++ {
 								s.orientation = HORIZONTAL
 								f.cells[i][j] = NewCell(s, SHIP)
-								/*
-									f.cells[i][j].status = SHIP
-									f.cells[i][j].ship = s
-								*/
 							}
 							s.x = j
 							s.y = i
-							fmt.Println("координаты (идём вправо)", i, j)
-							//fmt.Println("координаты", i, j)
 						case j > jRand:
 							s.x = j
 							s.y = i
-							fmt.Println("координаты идём влево", i, j)
 							for ; j > jRand; j-- {
 								s.orientation = HORIZONTAL
 								f.cells[i][j] = NewCell(s, SHIP)
-								/*
-									f.cells[i][j].status = SHIP
-									f.cells[i][j].ship = s
-								*/
 							}
-
-							//здесь записывать координаты
 						}
 
 						break
@@ -266,11 +246,9 @@ func (f *field) AddShipIfFits(s *shipImpl) { //rename to
 				}
 			}
 
-			if isFind {
-
+			if freeSpaceForShip {
 				break
 			}
-
 		}
 
 	}
@@ -330,8 +308,6 @@ func (f *field) pointAround(s *shipImpl) {
 		this_i = s.y
 		j = s.x
 	case s.orientation == HORIZONTAL:
-		fmt.Println("горизонтальный")
-		//this_j := j
 		if j+1 != len(f.cells) {
 			f.cells[this_i][j+1].status = NEAR_SHIP
 
@@ -409,7 +385,6 @@ type field struct {
 }
 
 func NewField(fieldSize int) *field {
-
 	f := new(field)
 	f.cells = make([][]*cell, 0, fieldSize)
 	for i := 0; i < fieldSize; i++ {
@@ -426,7 +401,6 @@ func NewField(fieldSize int) *field {
 }
 
 func DrawField(f *field) {
-
 	for i := 0; i < len(f.cells); i++ {
 		for j := 0; j < len(f.cells); j++ {
 			fmt.Print(f.cells[i][j].status)
@@ -444,35 +418,38 @@ func FieldToDraw(fieldSize int) [][]string {
 			playerField[i] = append(playerField[i], "#")
 		}
 	}
+
 	return playerField
 }
 
-func (f *field) DrawPlayerField(playerField [][]string, isHidden bool) {
+// todo возвращать string, вместо вывода в консоль
+func (f *field) DrawPlayerField(playerField [][]string, isHidden bool) /* string */ {
 	switch {
 	case !isHidden:
 		fmt.Println("  a b c d e f g h i j")
 		for i := 0; i < len(f.cells); i++ {
 			fmt.Printf("%d", i)
+			// todo то же самое, только результат получается в string
+			// fmt.Sprintf("%d", i)
 			for j := 0; j < len(f.cells); j++ {
-				switch {
-				case f.cells[i][j].status == FREE:
+				switch f.cells[i][j].status {
+				case FREE:
 					playerField[i][j] = "#"
-
-				case f.cells[i][j].status == NEAR_SHIP || f.cells[i][j].status == SHOT:
+				case NEAR_SHIP:
+					fallthrough
+				case SHOT:
 					playerField[i][j] = "X"
-
-				case f.cells[i][j].status == SHIP:
+				case SHIP:
 					playerField[i][j] = "□"
-
-				case f.cells[i][j].status == ATTACKED:
+				case ATTACKED:
 					playerField[i][j] = "⧆"
-
 				}
 
 			}
 			fmt.Println(playerField[i])
 		}
 	case isHidden:
+		// todo аналогично см.выше
 		fmt.Println("  a b c d e f g h i j")
 		for i := 0; i < len(f.cells); i++ {
 			fmt.Printf("%d", i)
@@ -503,6 +480,8 @@ func (f *field) shot(i, j int) ShotResult { //return shotResult?
 	// fmt.Println("f.cells[i][j].status", f.cells)
 
 	// здесь обработка выстрела
+
+	// TODO делегировать изменения состояния корабля - кораблю
 	if f.cells[i][j].status == FREE || f.cells[i][j].status == NEAR_SHIP {
 
 		f.cells[i][j].status = SHOT
@@ -512,6 +491,9 @@ func (f *field) shot(i, j int) ShotResult { //return shotResult?
 		return resultOfShot
 	}
 	if f.cells[i][j].status == SHIP {
+		// TODO
+		// result := f.cells[i][j].ship.Shot()
+		// return result
 		f.cells[i][j].status = ATTACKED
 
 		if f.cells[i][j].ship.health-1 > 0 {
@@ -557,9 +539,12 @@ func main() {
 			fmt.Println("")
 			game.player2.playerField.DrawPlayerField(enemyF, true)
 
+			// TODO принты только вот в этом месте программы, больше нигде не нужно жёстко привязываться к консоли
+			// вывод чужого поля
+			fmt.Println(game.GetCurrentPlayerEnemyFields())
+
 			s.Scan()
 			cmd = s.Text()
-
 			handler, err := ValidateAndParse(cmd, game)
 			if err != nil {
 				fmt.Printf("invalid input: %s \n", err.Error())
@@ -570,6 +555,8 @@ func main() {
 			//} else {
 			//	output = game.HandleShoot("")
 			//}
+
+			// TODO здесь весь вывод должен происходить
 			fmt.Println(output)
 
 			if output == "Промах!" {
@@ -581,17 +568,6 @@ func main() {
 			}
 		}
 		game.SwitchPlayer(p1, p2)
-	}
-}
-
-func (g *game) SwitchPlayer(p1 *player, p2 *player) {
-	switch {
-	case g.currentPlayer == p1:
-		g.currentPlayer = p2
-		break
-	case g.currentPlayer == p2:
-		g.currentPlayer = p1
-		break
 	}
 }
 
@@ -729,6 +705,16 @@ func (g *game) HandleStatus(input string) string {
 	return "status"
 }
 
+func (g *game) SwitchPlayer(p1 *player, p2 *player) {
+	switch {
+	case g.currentPlayer == p1:
+		g.currentPlayer = p2
+		break
+	case g.currentPlayer == p2:
+		g.currentPlayer = p1
+		break
+	}
+}
 func NewGame(p1, p2, curr *player) *game {
 	// todo create fields
 	return &game{
