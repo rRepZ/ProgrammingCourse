@@ -88,7 +88,7 @@ type shipImpl struct {
 	name        string
 	x           int //крайняя левая или верхняя координата
 	y           int
-	decks       []int
+	decks       []int //изменить в boolgi
 	orientation Orientation
 	health      int
 }
