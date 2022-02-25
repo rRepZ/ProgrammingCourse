@@ -88,7 +88,7 @@ type shipImpl struct {
 	name        string
 	x           int //крайняя левая или верхняя координата
 	y           int
-	decks       []int //изменить в boolgi
+	decks       []int
 	orientation Orientation
 	health      int
 }
@@ -510,7 +510,7 @@ func main() {
 
 	p1 := NewPlayerNoEnemy("Player", f1)
 	p2 := NewPlayer("Bot", p1, f2)
-	p1.enemy = p2
+	p1.SetEnemy(p2)
 
 	game := NewGame(p1, p2, p1)
 	enemyF := FieldToDraw(fSize)
@@ -523,7 +523,7 @@ func main() {
 		for isContinue {
 			//if game.currentPlayer.name != "Bot" {
 			fmt.Println("")
-			game.player2.playerField.DrawPlayerField(enemyF, true)
+			game.player2.GetField().DrawPlayerField(enemyF, true)
 
 			// TODO принты только вот в этом месте программы, больше нигде не нужно жёстко привязываться к консоли
 			// вывод чужого поля
@@ -559,7 +559,7 @@ func main() {
 
 func ValidateAndParse(input string, game *game) (cmdHandler, error) {
 	if len(input) < 2 {
-		return nil, fmt.Errorf("string length should be > 2\n")
+		return nil, fmt.Errorf("string length should be > 2")
 	}
 
 	switch input {
@@ -584,7 +584,7 @@ func ValidateShoot(input string) error {
 	x := rune(input[0])
 	// todo заглавные буквы тоже принимать на вход
 	if x < rune('a') || x > rune('j') {
-		return fmt.Errorf("invalid letter, should be from range [a-z]\n")
+		return fmt.Errorf("invalid letter, should be from range [a-z]")
 	}
 
 	num, err := strconv.Atoi(input[1:])
@@ -592,22 +592,73 @@ func ValidateShoot(input string) error {
 		return err
 	}
 	if num > 9 || num < 0 {
-		return fmt.Errorf("invalid number, should be from range [0-9]\n")
+		return fmt.Errorf("invalid number, should be from range [0-9]")
 	}
 
 	return nil
 }
 
-type player struct {
+type Player interface {
+	DoMove(x, y int) (result ShotResult, fieldAfterShot *field)
+	GetShot(x, y int) (result ShotResult, fieldAfterShot *field)
+
+	GetEnemy() Player
+	GetField() *field
+	GetStepsCount() int
+	SetEnemy(p1 Player)
+}
+
+type PlayerMock struct {
+	enemy      Player
+	field      field
+	stepsCount int
+
+	doMoveCnt int
+}
+
+func NewPlayerMock(enemy Player, field field, stepsCount int) Player {
+	return &PlayerMock{
+		enemy:      enemy,
+		field:      field,
+		stepsCount: stepsCount,
+	}
+}
+
+func (p *PlayerMock) DoMove(x, y int) (result ShotResult, fieldAfterShot *field) {
+	p.doMoveCnt++
+	return MISS, &field{}
+}
+
+func (p *PlayerMock) GetShot(x, y int) (result ShotResult, fieldAfterShot *field) {
+	return MISS, &field{}
+}
+
+func (p *PlayerMock) GetEnemy() Player {
+	return p.enemy
+}
+
+func (p *PlayerMock) GetField() *field {
+	return &p.field
+}
+
+func (p *PlayerMock) GetStepsCount() int {
+	return p.stepsCount
+}
+
+func (p *PlayerMock) SetEnemy(p1 Player) {
+	p.enemy = p1
+}
+
+type PlayerImpl struct {
 	name       string
-	enemy      *player
+	enemy      Player
 	stepsCount int
 
 	playerField *field
 }
 
-func NewPlayer(name string, enemy *player, f *field) *player {
-	return &player{
+func NewPlayer(name string, enemy Player, f *field) Player {
+	return &PlayerImpl{
 		name:        name,
 		enemy:       enemy,
 		stepsCount:  0,
@@ -615,60 +666,59 @@ func NewPlayer(name string, enemy *player, f *field) *player {
 	}
 }
 
-func NewPlayerNoEnemy(name string, f *field) *player {
-	return &player{
+func NewPlayerNoEnemy(name string, f *field) Player {
+	return &PlayerImpl{
 		name:        name,
 		stepsCount:  0,
 		playerField: f,
 	}
 }
 
-func (p *player) doMove(x, y int) (result ShotResult, fieldAfterShot *field) {
-
-	result, fieldAfterShot = p.enemy.getShot(x, y)
-
+func (p *PlayerImpl) DoMove(x, y int) (result ShotResult, fieldAfterShot *field) {
+	result, fieldAfterShot = p.enemy.GetShot(x, y)
 	return result, fieldAfterShot
 }
 
-func (p *player) getShot(x, y int) (result ShotResult, fieldAfterShot *field) {
+func (p *PlayerImpl) GetShot(x, y int) (result ShotResult, fieldAfterShot *field) {
 	res := p.playerField.shot(x, y)
-
 	return res, p.playerField
 }
 
-type game struct {
-	player1 *player
-	player2 *player
+func (p *PlayerImpl) GetEnemy() Player {
+	return p.enemy
+}
 
-	currentPlayer *player
+func (p *PlayerImpl) GetField() *field {
+	return p.playerField
+}
+
+func (p *PlayerImpl) GetStepsCount() int {
+	return p.stepsCount
+}
+
+func (p *PlayerImpl) SetEnemy(p1 Player) {
+	p.enemy = p1
+}
+
+type game struct {
+	player1 Player
+	player2 Player
+
+	currentPlayer Player
 }
 
 func (g *game) HandleShoot(input string) string {
 	var x, y int
-	//if g.currentPlayer.name != "Bot" {
 	x = int([]rune(input)[0] - []rune("a")[0])
-	//x, _ := strconv.Atoi(input[:1])
-	fmt.Println("X", x)
 	y, _ = strconv.Atoi(input[1:])
-	fmt.Println("Y", y)
+	res, _ := g.currentPlayer.DoMove(y, x) //res, fiels
 
-	/*	} else {
-		fmt.Println("Ход бота ", y)
-		x = rand.Intn(fSize)
-		y = rand.Intn(fSize)
-		for g.currentPlayer.enemy.playerField.cells[y][x].status != FREE && g.currentPlayer.enemy.playerField.cells[y][x].status != SHIP {
-			x = rand.Intn(fSize)
-			y = rand.Intn(fSize)
-		}
-	}*/
-	res, _ := g.currentPlayer.doMove(y, x) //res, fiels
-	//.Println(field)
 	// todo преобразовать в строковое представление и вернуть
 	if res == SINK {
 		//g.currentPlayer.enemy.playerField.pointAround(g.currentPlayer.enemy.playerField.cells[y][x].ship)
-		g.currentPlayer.enemy.playerField.shipsOnField--
+		g.currentPlayer.GetEnemy().GetField().shipsOnField--
 
-		if g.currentPlayer.enemy.playerField.shipsOnField == 0 {
+		if g.currentPlayer.GetEnemy().GetField().shipsOnField == 0 {
 			return "Победа!"
 		} else {
 			return "Корабль убит!"
@@ -686,24 +736,21 @@ func (g *game) HandleShoot(input string) string {
 
 func (g *game) HandleStatus(input string) string {
 	pfield := FieldToDraw(fSize)
-	g.player1.playerField.DrawPlayerField(pfield, false)
+	g.player1.GetField().DrawPlayerField(pfield, false)
 
 	// todo преобразовать в string
 	return "status"
 }
 
-func (g *game) SwitchPlayer(p1 *player, p2 *player) {
+func (g *game) SwitchPlayer(p1 Player, p2 Player) {
 	switch {
 	case g.currentPlayer == p1:
 		g.currentPlayer = p2
-		break
 	case g.currentPlayer == p2:
 		g.currentPlayer = p1
-		break
 	}
 }
-func NewGame(p1, p2, curr *player) *game {
-
+func NewGame(p1, p2, curr Player) *game {
 	return &game{
 		player1:       p1,
 		player2:       p2,
