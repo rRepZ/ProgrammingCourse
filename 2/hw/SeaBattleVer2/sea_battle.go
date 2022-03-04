@@ -553,7 +553,7 @@ func main() {
 				return
 			}
 		}
-		game.SwitchPlayer(p1, p2)
+
 	}
 }
 
@@ -728,7 +728,9 @@ func (g *game) HandleShoot(input string) string {
 		return "Попадание!"
 	}
 	if res == MISS {
+		g.SwitchPlayer(g.player1, g.player2)
 		return "Промах!"
+
 	}
 
 	return input
@@ -742,7 +744,7 @@ func (g *game) HandleStatus(input string) string {
 	return "status"
 }
 
-func (g *game) SwitchPlayer(p1 Player, p2 Player) {
+func (g *game) SwitchPlayer(p1 Player, p2 Player) { //не принимать игроков
 	switch {
 	case g.currentPlayer == p1:
 		g.currentPlayer = p2
